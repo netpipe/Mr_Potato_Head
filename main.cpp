@@ -54,6 +54,7 @@ public:
         featureSelector->addItem("ears");
         featureSelector->addItem("glasses");
         featureSelector->addItem("shoes");
+        featureSelector->addItem("hats");
 
         featureList = new QListWidget();
         featureList->setViewMode(QListView::IconMode);
