@@ -114,6 +114,7 @@ public:
             loadFeatureThumbnails(text);
         });
 
+        loadBodyImage2();
         mainLayout->addWidget(featureList);
 
         mainLayout->addWidget(rotationSlider);
@@ -123,6 +124,9 @@ public:
         setCentralWidget(central);
         resize(800, 600);
         setWindowTitle("Mr. Potato Head Maker");
+
+        featureSelector->setCurrentIndex(1);
+        featureSelector->setCurrentIndex(0);
     }
 
     void updateSlidersForItem(QGraphicsItem *item) {
@@ -156,6 +160,16 @@ public:
                 item->setSizeHint(QSize(72, 72));
                 featureList->addItem(item);
             }
+        }
+    }
+
+    void loadBodyImage2() {
+        QString path = QApplication::applicationDirPath() + "/assets/body.png";
+        if (!path.isEmpty()) {
+            scene->clear(); // clear previous
+            QPixmap pixmap(path);
+            auto body = scene->addPixmap(pixmap);
+            body->setZValue(-1);  // background
         }
     }
 
