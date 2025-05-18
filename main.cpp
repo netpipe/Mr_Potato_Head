@@ -13,6 +13,8 @@
 #include <QTransform>
 #include <QDir>
 #include <QGraphicsSceneWheelEvent>
+#include <QListWidget>
+#include <QDirIterator>
 
 class FeatureItem : public QGraphicsPixmapItem {
 public:
@@ -37,6 +39,7 @@ class MainWindow : public QMainWindow {
 FeatureItem *currentItem = nullptr;
 QSlider *rotationSlider;
 QSlider *scaleSlider;
+QListWidget *featureList;
 
 public:
     MainWindow() {
@@ -49,6 +52,23 @@ public:
         featureSelector->addItem("noses");
         featureSelector->addItem("mouths");
         featureSelector->addItem("ears");
+
+        featureList = new QListWidget();
+        featureList->setViewMode(QListView::IconMode);
+        featureList->setIconSize(QSize(64, 64));
+        featureList->setResizeMode(QListView::Adjust);
+        featureList->setSpacing(10);
+        featureList->setMovement(QListView::Static);
+        featureList->setFixedHeight(120);  // show as a preview strip
+
+        connect(featureList, &QListWidget::itemClicked, this, [=](QListWidgetItem *item) {
+            QString path = item->data(Qt::UserRole).toString();
+            QPixmap pixmap(path);
+            auto *feature = new FeatureItem(pixmap);
+            feature->setPos(100, 100);
+            scene->addItem(feature);
+        });
+
 
         QPushButton *addButton = new QPushButton("Add Feature");
         QPushButton *loadBody = new QPushButton("Load Potato");
@@ -87,6 +107,13 @@ connect(scene, &QGraphicsScene::selectionChanged, this, [this]() {
     if (scene->selectedItems().size() > 0)
         updateSlidersForItem(scene->selectedItems().first());
 });
+
+connect(featureSelector, &QComboBox::currentTextChanged, this, [=](const QString &text) {
+    loadFeatureThumbnails(text);
+});
+
+mainLayout->addWidget(featureList);
+
 mainLayout->addWidget(rotationSlider);
 mainLayout->addWidget(scaleSlider);
         central = new QWidget();
@@ -100,6 +127,31 @@ void updateSlidersForItem(QGraphicsItem *item) {
     if (currentItem) {
         rotationSlider->setValue(int(currentItem->rotation()));
         scaleSlider->setValue(int(currentItem->scale() * 100));
+    }
+}
+void keyPressEvent(QKeyEvent *event) override {
+    if (event->key() == Qt::Key_Delete) {
+        for (QGraphicsItem *item : scene->selectedItems()) {
+            scene->removeItem(item);
+            delete item;
+        }
+    }
+}
+
+
+void loadFeatureThumbnails(const QString &folderName) {
+    featureList->clear();
+    QString dirPath = basePath + "/" + folderName;
+    QDirIterator it(dirPath, {"*.png", "*.jpg", "*.jpeg"}, QDir::Files);
+    while (it.hasNext()) {
+        QString path = it.next();
+        QPixmap pix(path);
+        if (!pix.isNull()) {
+            QListWidgetItem *item = new QListWidgetItem(QIcon(pix), "");
+            item->setData(Qt::UserRole, path);
+            item->setSizeHint(QSize(72, 72));
+            featureList->addItem(item);
+        }
     }
 }
 
