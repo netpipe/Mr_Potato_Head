@@ -35,11 +35,11 @@ class MainWindow : public QMainWindow {
     QGraphicsView *view;
     QWidget *central;
     QComboBox *featureSelector;
-    QString basePath = "assets";
-FeatureItem *currentItem = nullptr;
-QSlider *rotationSlider;
-QSlider *scaleSlider;
-QListWidget *featureList;
+    QString basePath = QApplication::applicationDirPath() + "/assets";
+    FeatureItem *currentItem = nullptr;
+    QSlider *rotationSlider;
+    QSlider *scaleSlider;
+    QListWidget *featureList;
 
 public:
     MainWindow() {
@@ -85,75 +85,77 @@ public:
         mainLayout->addLayout(layout);
         mainLayout->addWidget(view);
 
-rotationSlider = new QSlider(Qt::Horizontal);
-rotationSlider->setRange(-180, 180);
-rotationSlider->setTickInterval(10);
-rotationSlider->setTickPosition(QSlider::TicksBelow);
+        rotationSlider = new QSlider(Qt::Horizontal);
+        rotationSlider->setRange(-180, 180);
+        rotationSlider->setTickInterval(10);
+        rotationSlider->setTickPosition(QSlider::TicksBelow);
 
-scaleSlider = new QSlider(Qt::Horizontal);
-scaleSlider->setRange(10, 300);  // Represents 0.1 to 3.0
-scaleSlider->setTickInterval(10);
-scaleSlider->setTickPosition(QSlider::TicksBelow);
+        scaleSlider = new QSlider(Qt::Horizontal);
+        scaleSlider->setRange(10, 300);  // Represents 0.1 to 3.0
+        scaleSlider->setTickInterval(10);
+        scaleSlider->setTickPosition(QSlider::TicksBelow);
 
-connect(rotationSlider, &QSlider::valueChanged, this, [this](int value) {
-    if (currentItem) currentItem->setRotation(value);
-});
+        connect(rotationSlider, &QSlider::valueChanged, this, [this](int value) {
+            if (currentItem) currentItem->setRotation(value);
+        });
 
-connect(scaleSlider, &QSlider::valueChanged, this, [this](int value) {
-    if (currentItem) currentItem->setScale(value / 100.0);
-});
+        connect(scaleSlider, &QSlider::valueChanged, this, [this](int value) {
+            if (currentItem) currentItem->setScale(value / 100.0);
+        });
 
-connect(scene, &QGraphicsScene::selectionChanged, this, [this]() {
-    if (scene->selectedItems().size() > 0)
-        updateSlidersForItem(scene->selectedItems().first());
-});
+        connect(scene, &QGraphicsScene::selectionChanged, this, [this]() {
+            if (scene->selectedItems().size() > 0)
+                updateSlidersForItem(scene->selectedItems().first());
+        });
 
-connect(featureSelector, &QComboBox::currentTextChanged, this, [=](const QString &text) {
-    loadFeatureThumbnails(text);
-});
+        connect(featureSelector, &QComboBox::currentTextChanged, this, [=](const QString &text) {
+            loadFeatureThumbnails(text);
+        });
 
-mainLayout->addWidget(featureList);
+        mainLayout->addWidget(featureList);
 
-mainLayout->addWidget(rotationSlider);
-mainLayout->addWidget(scaleSlider);
+        mainLayout->addWidget(rotationSlider);
+        mainLayout->addWidget(scaleSlider);
         central = new QWidget();
         central->setLayout(mainLayout);
         setCentralWidget(central);
         resize(800, 600);
         setWindowTitle("Mr. Potato Head Maker");
     }
-void updateSlidersForItem(QGraphicsItem *item) {
-    currentItem = dynamic_cast<FeatureItem *>(item);
-    if (currentItem) {
-        rotationSlider->setValue(int(currentItem->rotation()));
-        scaleSlider->setValue(int(currentItem->scale() * 100));
-    }
-}
-void keyPressEvent(QKeyEvent *event) override {
-    if (event->key() == Qt::Key_Delete) {
-        for (QGraphicsItem *item : scene->selectedItems()) {
-            scene->removeItem(item);
-            delete item;
+
+    void updateSlidersForItem(QGraphicsItem *item) {
+        currentItem = dynamic_cast<FeatureItem *>(item);
+        if (currentItem) {
+            rotationSlider->setValue(int(currentItem->rotation()));
+            scaleSlider->setValue(int(currentItem->scale() * 100));
         }
     }
-}
 
-
-void loadFeatureThumbnails(const QString &folderName) {
-    featureList->clear();
-    QString dirPath = basePath + "/" + folderName;
-    QDirIterator it(dirPath, {"*.png", "*.jpg", "*.jpeg"}, QDir::Files);
-    while (it.hasNext()) {
-        QString path = it.next();
-        QPixmap pix(path);
-        if (!pix.isNull()) {
-            QListWidgetItem *item = new QListWidgetItem(QIcon(pix), "");
-            item->setData(Qt::UserRole, path);
-            item->setSizeHint(QSize(72, 72));
-            featureList->addItem(item);
+    void keyPressEvent(QKeyEvent *event) override {
+        if (event->key() == Qt::Key_Delete) {
+            for (QGraphicsItem *item : scene->selectedItems()) {
+                scene->removeItem(item);
+                delete item;
+            }
         }
     }
-}
+
+
+    void loadFeatureThumbnails(const QString &folderName) {
+        featureList->clear();
+        QString dirPath = basePath + "/" + folderName;
+        QDirIterator it(dirPath, {"*.png", "*.jpg", "*.jpeg"}, QDir::Files);
+        while (it.hasNext()) {
+            QString path = it.next();
+            QPixmap pix(path);
+            if (!pix.isNull()) {
+                QListWidgetItem *item = new QListWidgetItem(QIcon(pix), "");
+                item->setData(Qt::UserRole, path);
+                item->setSizeHint(QSize(72, 72));
+                featureList->addItem(item);
+            }
+        }
+    }
 
     void loadBodyImage() {
         QString path = QFileDialog::getOpenFileName(this, "Select Potato Image", basePath, "Images (*.png *.jpg)");
@@ -175,9 +177,9 @@ void loadFeatureThumbnails(const QString &folderName) {
             auto *item = new FeatureItem(pixmap);
             item->setPos(100, 100);  // arbitrary default
             scene->addItem(item);
+            }
         }
-    }
-};
+    };
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
