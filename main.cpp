@@ -52,6 +52,8 @@ public:
         featureSelector->addItem("noses");
         featureSelector->addItem("mouths");
         featureSelector->addItem("ears");
+        featureSelector->addItem("glasses");
+        featureSelector->addItem("shoes");
 
         featureList = new QListWidget();
         featureList->setViewMode(QListView::IconMode);
